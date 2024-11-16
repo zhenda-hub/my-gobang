@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>五子棋</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #d2691e;
+    }
+
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="board" width="800" height="800"></canvas>
+  <script>
+    const BOARD_SIZE = 15;
+    const GRID_SIZE = 800 / (BOARD_SIZE + 1);
+    const board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
+    const canvas = document.getElementById("board");
+    const ctx = canvas.getContext("2d");
+
+    function drawBoard() {
+      ctx.fillStyle = "#D2691E";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "black";
+      for (let i = 0; i < BOARD_SIZE; i++) {
+        ctx.beginPath();
+        ctx.moveTo(GRID_SIZE, (i + 1) * GRID_SIZE);
+        ctx.lineTo(800 - GRID_SIZE, (i + 1) * GRID_SIZE);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo((i + 1) * GRID_SIZE, GRID_SIZE);
+        ctx.lineTo((i + 1) * GRID_SIZE, 800 - GRID_SIZE);
+        ctx.stroke();
+      }
+    }
+
+    function drawPieces() {
+      for (let i = 0; i < BOARD_SIZE; i++) {
+        for (let j = 0; j < BOARD_SIZE; j++) {
+          if (board[i][j] === 1) {
+            ctx.fillStyle = "black";
+            ctx.beginPath();
+            ctx.arc((j + 1) * GRID_SIZE, (i + 1) * GRID_SIZE, GRID_SIZE / 2 - 2, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (board[i][j] === 2) {
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc((j + 1) * GRID_SIZE, (i + 1) * GRID_SIZE, GRID_SIZE / 2 - 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+
+    function checkWin(x, y, player) {
+      const directions = [
+        [0, 1],
+        [1, 0],
+        [1, 1],
+        [1, -1],
+      ];
+      for (const [dx, dy] of directions) {
+        let count = 1;
+        for (let i = 1; i < 5; i++) {
+          const newX = x + i * dx,
+            newY = y + i * dy;
+          if (
+            newX >= 0 &&
+            newX < BOARD_SIZE &&
+            newY >= 0 &&
+            newY < BOARD_SIZE &&
+            board[newX][newY] === player
+          ) {
+            count++;
+          } else {
+            break;
+          }
+        }
+        for (let i = 1; i < 5; i++) {
+          const newX = x - i * dx,
+            newY = y - i * dy;
+          if (
+            newX >= 0 &&
+            newX < BOARD_SIZE &&
+            newY >= 0 &&
+            newY < BOARD_SIZE &&
+            board[newX][newY] === player
+          ) {
+            count++;
+          } else {
+            break;
+          }
+        }
+        if (count >= 5) return true;
+      }
+      return false;
+    }
+
+    canvas.addEventListener("click", (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((event.clientY - rect.top) / GRID_SIZE) - 1;
+      const y = Math.floor((event.clientX - rect.left) / GRID_SIZE) - 1;
+      if (board[x][y] === 0) {
+        board[x][y] = 1; // 玩家下棋
+        if (checkWin(x, y, 1)) {
+          alert("玩家获胜！");
+        }
+        // AI下棋逻辑可以在这里添加
+        drawBoard();
+        drawPieces();
+      }
+    });
+
+    drawBoard();
+  </script>
+</body>
+
+</html>

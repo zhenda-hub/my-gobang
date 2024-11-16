@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>五子棋</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="container">
+    <h1>五子棋 - 人机对战</h1>
+    <div class="game-controls-panel">
+      <div class="control-group">
+        <label for="difficultySelect">电脑AI难度</label>
+        <select id="difficultySelect" onchange="setDifficulty(this.value)">
+          <option value="easy">简单 (适合初学者)</option>
+          <option value="medium" selected>中等 (有一定棋力)</option>
+          <option value="hard">困难 (棋力很强)</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <button onclick="undoMove()" id="undoBtn">悔棋 (剩余5次)</button>
+        <button onclick="toggleTheme()" id="themeBtn" class="theme-btn">🌙</button>
+      </div>
+    </div>
+    <div class="canvas-container">
+      <canvas id="board"></canvas>
+    </div>
+  </div>
+  <footer class="footer">
+    <div class="footer-content">
+      <p>© 2024 zhenda. All Rights Reserved.</p>
+      <p class="footer-text">用❤️制作</p>
+    </div>
+  </footer>
+  <script src="script.js"></script>
+</body>
+
+</html>
