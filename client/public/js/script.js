@@ -141,7 +141,7 @@ function initializeCanvas() {
     canvas.height = size;
     GRID_SIZE = size / (BOARD_SIZE + 1);
     
-    // 立即绘制棋盘
+    // ���即绘制棋盘
     drawBoard();
 }
 
@@ -194,7 +194,7 @@ class Game {
         // 检查横、竖四个方向
         const directions = [
             [[0, 1], [0, -1]], // 横向
-            [[1, 0], [-1, 0]], // 竖���
+            [[1, 0], [-1, 0]], // 竖
             [[1, 1], [-1, -1]], // 主对角线
             [[1, -1], [-1, 1]]  // 副对角线
         ];
@@ -281,19 +281,37 @@ let isPlayerTurn = false;
 // 初始化 WebSocket
 function initializeSocket() {
     try {
-        // 使用相对路径连接 WebSocket
-        socket = io('/', {
-            path: '/socket.io',
+        // 使用容器服务名而不是 localhost
+        socket = io('http://game-server:3000', {
             transports: ['websocket', 'polling'],
-            autoConnect: true
+            path: '/socket.io/',
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            autoConnect: true,
+            withCredentials: true
         });
+        
+        // 添加更多的调试信息
+        console.log('正在尝试连接到WebSocket服务器...');
         
         socket.on('connect', () => {
             console.log('WebSocket 已连接，ID:', socket.id);
         });
 
         socket.on('connect_error', (error) => {
-            console.error('连接错误:', error);
+            console.error('连接错误详情:', {
+                message: error.message,
+                description: error.description,
+                type: error.type,
+                transport: socket.io.engine.transport.name
+            });
+            
+            // 尝试使用轮询作为备选
+            if (socket.io.opts.transports.length === 1) {
+                console.log('切换到轮询模式');
+                socket.io.opts.transports = ['polling', 'websocket'];
+            }
         });
 
         socket.on('disconnect', (reason) => {
@@ -342,7 +360,7 @@ function initializeSocket() {
         }, 60000);
 
     } catch (error) {
-        console.error('WebSocket 初始化失败:', error);
+        console.error('WebSocket 初始化失败:', error.stack);
     }
 }
 

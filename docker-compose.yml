@@ -14,6 +14,13 @@ services:
       - /usr/src/app/server/node_modules
     working_dir: /usr/src/app/server
     command: npm run dev
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     depends_on:
       - mongo
 
@@ -30,6 +37,10 @@ services:
     command: npm run dev
     environment:
       - CHOKIDAR_USEPOLLING=true
+    networks:
+      - app-network
+    depends_on:
+      - game-server
 
   mongo:
     image: mongo:latest
@@ -37,6 +48,12 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   mongodb_data:
