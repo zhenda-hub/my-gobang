@@ -7,16 +7,17 @@
     "dev": "nodemon --legacy-watch src/index.js"
   },
   "dependencies": {
-    "express": "^4.17.1",
-    "mongoose": "^6.0.0",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^8.5.1",
     "cookie-parser": "^1.4.6",
+    "express": "^4.17.1",
     "express-validator": "^6.14.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^6.0.0",
+    "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^4.6.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"
   }
-} 
+}
