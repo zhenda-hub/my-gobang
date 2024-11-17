@@ -81,10 +81,10 @@ h1 {
 
 .canvas-container {
   width: 100%;
-  padding-bottom: 100%;
-  position: relative;
   max-width: min(800px, 90vw);
-  max-height: min(800px, 90vw);
+  aspect-ratio: 1;
+  position: relative;
+  margin: 20px auto;
 }
 
 canvas {
@@ -287,4 +287,38 @@ canvas {
   .footer-content {
     font-size: 12px;
   }
+}
+
+/* 添加多人游戏相关样式 */
+.join-room {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.room-code {
+  font-size: 24px;
+  color: #333;
+  margin: 20px 0;
+  padding: 10px;
+  background: #f0f0f0;
+  border-radius: 5px;
+}
+
+.chess-board {
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    /* 确保棋盘大小固定 */
+    width: 600px;
+    height: 600px;
+    margin: auto;
+}
+
+.grid-cell {
+    border: 1px solid #000;
+    position: relative;
+    /* 确保棋子居中 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }

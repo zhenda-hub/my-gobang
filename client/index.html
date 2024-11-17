@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五子棋游戏</title>
+    <link rel="stylesheet" href="public/css/style.css">
+    <link rel="stylesheet" href="public/css/auth.css">
+</head>
+<body>
+    <!-- 标题部分 -->
+    <div class="title-container">
+        <div class="game-title">
+            <h1>五子棋游戏</h1>
+            <div class="subtitle">经典棋类游戏的现代演绎</div>
+        </div>
+    </div>
+
+    <!-- 用户状态栏 -->
+    <div class="user-status">
+        <span id="username">游客</span>
+        <a href="login.html" id="loginBtn">登录</a>
+        <button onclick="logout()" id="logoutBtn" style="display: none;">退出</button>
+    </div>
+
+    <!-- 游戏主区域 -->
+    <div class="container">
+        <h1>五子棋 - 人机对战</h1>
+        
+        <div class="game-controls-panel">
+            <div class="control-group">
+                <label>电脑AI难度：</label>
+                <select id="difficulty" onchange="setDifficulty(this.value)">
+                    <option value="easy">简单</option>
+                    <option value="medium" selected>困难 (棋力很强)</option>
+                    <option value="hard">特难</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <button id="undoBtn" onclick="undo()">悔棋 (剩余5次)</button>
+                <button id="themeBtn" onclick="toggleTheme()">🌙</button>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="board"></canvas>
+        </div>
+    </div>
+
+    <!-- 脚本引用 -->
+    <script src="public/js/script.js"></script>
+</body>
+</html>

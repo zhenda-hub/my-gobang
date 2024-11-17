@@ -1,0 +1,376 @@
+/* 主题变量 - 更新配色方案 */
+:root {
+    /* 亮色主题 - 更新背景色为温暖的米色调 */
+    --bg-primary: #f3e9d9;  /* 更柔和的米色背景 */
+    --bg-secondary: rgba(243, 233, 217, 0.95);
+    --bg-tertiary: rgba(238, 226, 206, 0.9);
+    --text-primary: #2c3e50;
+    --text-secondary: #5d6d7e;
+    --border-color: #e8ecf0;
+    --accent-color: #3498db;
+    --accent-hover: #2980b9;
+    --shadow-color: rgba(0, 0, 0, 0.08);
+    --input-bg: #ffffff;
+    --input-border: #e0e6ed;
+    
+    /* 棋盘专用颜色 */
+    --board-bg: #e6d5b8;    /* 稍深的米色作为棋盘背景 */
+    --board-border: #d4bc91;
+    --board-grid: #b89f6d;  /* 深棕色网格线 */
+    --piece-black: #2c3e50;
+    --piece-white: #ecf0f1;
+    --piece-shadow: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] {
+    /* 暗色主题 - 更新为深褐色调 */
+    --bg-primary: #2c2520;  /* 深褐色背景 */
+    --bg-secondary: rgba(44, 37, 32, 0.95);
+    --bg-tertiary: rgba(54, 45, 39, 0.9);
+    --text-primary: #ecf0f1;
+    --text-secondary: #bdc3c7;
+    --border-color: #2c3e50;
+    --accent-color: #3498db;
+    --accent-hover: #2980b9;
+    --shadow-color: rgba(0, 0, 0, 0.2);
+    --input-bg: #2c3e50;
+    --input-border: #34495e;
+    
+    /* 暗色模式棋盘专用颜色 */
+    --board-bg: #3d332c;    /* 深褐色棋盘背景 */
+    --board-border: #4a3f37;
+    --board-grid: #5c4f45;  /* 棕色网格线 */
+    --piece-black: #1a1a1a;
+    --piece-white: #ecf0f1;
+    --piece-shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* 更新现有样式使用变量 */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.auth-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+}
+
+.auth-box {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px var(--shadow-color);
+    padding: 30px;
+    margin-bottom: 20px;
+}
+
+.auth-box h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+}
+
+.auth-box input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+    background: var(--input-bg);
+    color: var(--text-primary);
+}
+
+.auth-box input:focus {
+    border-color: var(--accent-color);
+    outline: none;
+}
+
+.auth-box button {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: transform 0.2s ease;
+}
+
+.auth-box button:hover {
+    background: var(--accent-hover);
+}
+
+.auth-box button:active {
+    transform: scale(0.98);
+}
+
+.auth-message {
+    text-align: center;
+    color: #666;
+    margin-top: 10px;
+}
+
+.auth-error {
+    color: #f44336;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.auth-message a {
+    color: #4CAF50;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.auth-message a:hover {
+    color: #45a049;
+}
+
+/* 通用按钮样式 */
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.btn-primary {
+    background: var(--accent-color);
+    color: white;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-secondary);
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+/* 用户状态栏样式 */
+.user-status {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-radius: 20px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+.user-status span {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.user-status a {
+    text-decoration: none;
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+/* 游戏控制面板样式更新 */
+.game-controls-panel {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    padding: 24px;
+    margin: 24px auto;
+    max-width: 1200px;
+}
+
+.control-section {
+    background: var(--bg-tertiary);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.control-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px var(--shadow-color);
+}
+
+.control-section h3 {
+    margin: 0 0 15px 0;
+    color: var(--text-primary);
+    font-size: 16px;
+    text-align: center;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* AI 控制区域样式 */
+.ai-controls select {
+    width: 100%;
+    padding: 8px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--input-border);
+}
+
+/* 多人对战控制区域样式 */
+.multiplayer-controls .join-room {
+    display: flex;
+    gap: 8px;
+}
+
+.multiplayer-controls input {
+    flex: 1;
+    padding: 8px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    border-color: var(--input-border);
+    border-radius: 4px;
+}
+
+.multiplayer-controls button {
+    white-space: nowrap;
+}
+
+/* 通用控制区域样式 */
+.common-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.common-controls .control-group {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+/* 多人游戏菜单样式 */
+.menu {
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.menu button {
+    margin: 5px;
+}
+
+.join-room {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.join-room input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.room-code {
+    text-align: center;
+    margin: 10px 0;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    font-weight: 500;
+}
+
+/* 添加游戏棋盘样式 */
+.game-board {
+    background: var(--board-bg);
+    border: 2px solid var(--board-border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    padding: 20px;
+    margin: 20px auto;
+}
+
+.game-grid {
+    border: 1px solid var(--board-grid);
+}
+
+/* 添加游戏标题样式 */
+.game-title {
+    text-align: center;
+    padding: 30px 0;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.game-title h1 {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 0;
+    padding: 0;
+    position: relative;
+    text-shadow: 2px 2px 4px var(--shadow-color);
+}
+
+.game-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 4px;
+    background: var(--accent-color);
+    border-radius: 2px;
+}
+
+.game-title .subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    font-weight: 400;
+}
+
+/* 添加标题容器背景 */
+.title-container {
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+} 
