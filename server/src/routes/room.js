@@ -1,171 +1,148 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const auth = require('../middleware/auth');
 
 // 存储房间信息
 const rooms = new Map();
 
-/**
- * @swagger
- * /api/room/create:
- *   post:
- *     summary: 创建新游戏房间
- *     tags: [Room]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: 成功创建房间
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 roomId:
- *                   type: string
- *                   description: 房间ID
- *       401:
- *         description: 未授权
- */
-router.post('/create', auth, (req, res) => {
-    const roomId = uuidv4();
-    rooms.set(roomId, {
-        id: roomId,
-        host: req.user.id,
-        players: [req.user.id],
-        status: 'waiting',
-        created: Date.now()
-    });
-    
-    res.json({ roomId });
-});
+// 添加房间超时配置
+const ROOM_TIMEOUT = 10 * 60 * 1000; // 10分钟，单位毫秒
 
-/**
- * @swagger
- * /api/room/{roomId}/join:
- *   post:
- *     summary: 加入游戏房间
- *     tags: [Room]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: roomId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: 成功加入房间
- *       404:
- *         description: 房间不存在
- *       400:
- *         description: 房间已满
- */
-router.post('/:roomId/join', auth, (req, res) => {
-    const { roomId } = req.params;
+// 添加房间活动时间跟踪
+function updateRoomActivity(roomId) {
     const room = rooms.get(roomId);
-    
-    if (!room) {
-        return res.status(404).json({ message: '房间不存在' });
+    if (room) {
+        room.lastActivity = Date.now();
     }
-    
-    if (room.players.length >= 2) {
-        return res.status(400).json({ message: '房间已满' });
-    }
-    
-    if (!room.players.includes(req.user.id)) {
-        room.players.push(req.user.id);
-        if (room.players.length === 2) {
-            room.status = 'playing';
+}
+
+// 添加清理过期房间的函数
+function cleanInactiveRooms() {
+    const now = Date.now();
+    for (const [roomId, room] of rooms.entries()) {
+        if (now - room.lastActivity > ROOM_TIMEOUT) {
+            // 通知房间内的所有玩家
+            if (room.players.length > 0) {
+                io.to(roomId).emit('roomExpired', '房间因长时间无操作已关闭');
+            }
+            // 清理房间
+            rooms.delete(roomId);
+            console.log(`房间 ${roomId} 已因超时被清理`);
         }
     }
-    
-    res.json({ message: '成功加入房间' });
-});
+}
 
-/**
- * @swagger
- * /api/room/{roomId}/status:
- *   get:
- *     summary: 获取房间状态
- *     tags: [Room]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: roomId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: 房间状态
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   enum: [waiting, playing, finished]
- *                 playerCount:
- *                   type: integer
- *       404:
- *         description: 房间不存在
- */
-router.get('/:roomId/status', auth, (req, res) => {
-    const { roomId } = req.params;
-    const room = rooms.get(roomId);
-    
-    if (!room) {
-        return res.status(404).json({ message: '房间不存在' });
-    }
-    
-    res.json({
-        status: room.status,
-        playerCount: room.players.length
+module.exports = function(io) {
+    // 设置定期清理
+    setInterval(cleanInactiveRooms, 60000); // 每分钟检查一次
+
+    // WebSocket 连接处理
+    io.on('connection', (socket) => {
+        console.log('用户连接：', socket.id);
+
+        // 创建房间
+        socket.on('createRoom', () => {
+            const roomId = uuidv4().substring(0, 6);
+            rooms.set(roomId, {
+                players: [socket.id],
+                currentPlayer: socket.id,
+                board: Array(15).fill().map(() => Array(15).fill(0)),
+                lastActivity: Date.now() // 添加最后活动时间
+            });
+            
+            socket.join(roomId);
+            socket.emit('roomCreated', { roomId });
+        });
+
+        // 加入房间
+        socket.on('joinRoom', (roomId) => {
+            const room = rooms.get(roomId);
+            if (!room) {
+                socket.emit('error', '房间不存在');
+                return;
+            }
+            if (room.players.length >= 2) {
+                socket.emit('error', '房间已满');
+                return;
+            }
+
+            room.players.push(socket.id);
+            updateRoomActivity(roomId); // 更新活动时间
+            socket.join(roomId);
+            io.to(roomId).emit('playerJoined', {
+                players: room.players,
+                currentPlayer: room.currentPlayer
+            });
+        });
+
+        // 处理落子
+        socket.on('makeMove', ({ roomId, x, y }) => {
+            const room = rooms.get(roomId);
+            if (!room) return;
+
+            if (socket.id !== room.currentPlayer) {
+                socket.emit('error', '还没轮到你下棋');
+                return;
+            }
+
+            if (room.board[x][y] !== 0) {
+                socket.emit('error', '该位置已有棋子');
+                return;
+            }
+
+            // 更新棋盘和活动时间
+            updateRoomActivity(roomId);
+            const playerIndex = room.players.indexOf(socket.id);
+            room.board[x][y] = playerIndex + 1;
+            
+            // 切换当前玩家
+            room.currentPlayer = room.players.find(id => id !== socket.id);
+
+            // 广播移动信息
+            io.to(roomId).emit('moveMade', {
+                x,
+                y,
+                player: playerIndex + 1,
+                currentPlayer: room.currentPlayer
+            });
+        });
+
+        // 离开房间
+        socket.on('leaveRoom', (roomId) => {
+            const room = rooms.get(roomId);
+            if (room) {
+                room.players = room.players.filter(id => id !== socket.id);
+                updateRoomActivity(roomId);
+                if (room.players.length === 0) {
+                    rooms.delete(roomId);
+                }
+                socket.leave(roomId);
+                io.to(roomId).emit('playerLeft', socket.id);
+            }
+        });
+
+        // 断开连接处理
+        socket.on('disconnect', () => {
+            for (const [roomId, room] of rooms.entries()) {
+                if (room.players.includes(socket.id)) {
+                    room.players = room.players.filter(id => id !== socket.id);
+                    updateRoomActivity(roomId);
+                    if (room.players.length === 0) {
+                        rooms.delete(roomId);
+                    } else {
+                        io.to(roomId).emit('playerLeft', socket.id);
+                    }
+                }
+            }
+        });
+
+        // 添加心跳检测
+        socket.on('heartbeat', ({ roomId }) => {
+            if (roomId && rooms.has(roomId)) {
+                updateRoomActivity(roomId);
+            }
+        });
     });
-});
 
-/**
- * @swagger
- * /api/room/{roomId}/leave:
- *   post:
- *     summary: 离开游戏房间
- *     tags: [Room]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: roomId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: 成功离开房间
- *       404:
- *         description: 房间不存在
- */
-router.post('/:roomId/leave', auth, (req, res) => {
-    const { roomId } = req.params;
-    const room = rooms.get(roomId);
-    
-    if (!room) {
-        return res.status(404).json({ message: '房间不存在' });
-    }
-    
-    room.players = room.players.filter(id => id !== req.user.id);
-    
-    if (room.players.length === 0) {
-        rooms.delete(roomId);
-    } else {
-        room.status = 'waiting';
-    }
-    
-    res.json({ message: '成功离开房间' });
-});
-
-module.exports = router; 
+    return router;
+}; 

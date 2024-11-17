@@ -44,9 +44,17 @@ function resetGame() {
     };
     moveHistory = [];
     undoCount = 5;
+    gameOver = false;  // 确保重置游戏状态
+    
+    // 更新UI
     updateUndoButton();
     drawBoard();
     drawPieces();
+    
+    // 如果在多人对战模式，重置玩家回合
+    if (currentRoom) {
+        isPlayerTurn = socket.id === room.currentPlayer;
+    }
 }
 
 function setDifficulty(difficulty) {
@@ -54,18 +62,39 @@ function setDifficulty(difficulty) {
     resetGame();
 }
 
-// 添加创建房间按钮的事件监听
+// 修改 DOMContentLoaded 事件监听
 document.addEventListener('DOMContentLoaded', () => {
-    const createButton = document.querySelector('.create-room-btn');
-    if (createButton) {
-        createButton.addEventListener('click', () => {
-            console.log('创建房间按钮被点击');
-            // 这里添加创建房间的逻辑
-        });
+    initializeCanvas();
+    initializeSocket(); // 确保初始化 WebSocket
+    
+    // 添加房间控制按钮的事件监听
+    const createRoomBtn = document.getElementById('createRoomBtn');
+    const joinRoomBtn = document.getElementById('joinRoomBtn');
+    const leaveRoomBtn = document.getElementById('leaveRoomBtn');
+    
+    if (createRoomBtn) {
+        createRoomBtn.addEventListener('click', createRoom);
     }
     
-    // 初始化棋盘
-    initializeCanvas();
+    if (joinRoomBtn) {
+        joinRoomBtn.addEventListener('click', joinRoom);
+    }
+    
+    if (leaveRoomBtn) {
+        leaveRoomBtn.addEventListener('click', leaveRoom);
+    }
+
+    // 添加棋盘点击事件监听
+    canvas.addEventListener('click', handleClick);
+    
+    // 监听窗口大小变化
+    window.addEventListener('resize', () => {
+        initializeCanvas();
+        drawPieces();
+    });
+    
+    // 初始调试
+    debug();
 });
 
 function initializeCanvas() {
@@ -122,17 +151,6 @@ function drawBoard() {
     ctx.stroke();
 }
 
-// 确保DOM加载完成后初始化
-document.addEventListener('DOMContentLoaded', () => {
-    initializeCanvas();
-    
-    // 监听窗口大小变化
-    window.addEventListener('resize', () => {
-        initializeCanvas();
-        drawPieces(); // 重新绘制棋子
-    });
-});
-
 // 检查这些核心功能是否被破坏
 class Game {
     constructor() {
@@ -149,7 +167,7 @@ class Game {
     
     // 检查胜利条件
     checkWin(x, y, player) {
-        // 检查横、竖��斜四个方向
+        // 检查横、竖四个方向
         const directions = [
             [[0, 1], [0, -1]], // 横向
             [[1, 0], [-1, 0]], // 竖向
@@ -231,7 +249,68 @@ function drawPieces() {
     });
 }
 
-// 添加处理点击事件的函数
+// 添加 WebSocket 相关变量
+let socket;
+let currentRoom = null;
+let isPlayerTurn = false;
+
+// 初始化 WebSocket
+function initializeSocket() {
+    try {
+        socket = io(); // 确保已经引入了 socket.io-client
+        console.log('WebSocket 连接初始化');
+
+        socket.on('connect', () => {
+            console.log('WebSocket 已连接');
+        });
+
+        socket.on('roomCreated', ({ roomId }) => {
+            console.log('房间创建成功:', roomId);
+            currentRoom = roomId;
+            document.getElementById('roomInfo').style.display = 'block';
+            document.getElementById('currentRoom').textContent = roomId;
+            isPlayerTurn = true;
+        });
+
+        socket.on('playerJoined', ({ players, currentPlayer }) => {
+            isPlayerTurn = socket.id === currentPlayer;
+            // 更新UI显示对手加入
+            alert('对手已加入游戏！');
+        });
+
+        socket.on('moveMade', ({ x, y, player, currentPlayer }) => {
+            makeMove(x, y, player);
+            isPlayerTurn = socket.id === currentPlayer;
+        });
+
+        socket.on('playerLeft', (playerId) => {
+            alert('对手已离开游戏！');
+            resetGame();
+        });
+
+        socket.on('error', (message) => {
+            alert(message);
+        });
+
+        // 添加房间过期处理
+        socket.on('roomExpired', (message) => {
+            alert(message);
+            leaveRoom();
+        });
+
+        // 如果在房间中，每分钟发送一次心跳
+        setInterval(() => {
+            if (currentRoom) {
+                socket.emit('heartbeat', { roomId: currentRoom });
+            }
+        }, 60000);
+
+    } catch (error) {
+        console.error('WebSocket 初始化失败:', error);
+    }
+}
+
+// 修改处理点击事件的函数
 function handleClick(event) {
     if (gameOver) return;
     
@@ -239,28 +318,58 @@ function handleClick(event) {
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
     
-    // 转换为棋盘坐标
     const i = Math.round(x / GRID_SIZE - 1);
     const j = Math.round(y / GRID_SIZE - 1);
     
-    // 检查是否在有效范围内
     if (i >= 0 && i < BOARD_SIZE && j >= 0 && j < BOARD_SIZE) {
         if (board[i][j] === 0) {
-            // 玩家落子
-            makeMove(i, j, 1);
-            
-            // AI回合
-            setTimeout(() => {
-                const aiMove = getAIMove();
-                if (aiMove) {
-                    makeMove(aiMove.x, aiMove.y, 2);
+            if (currentRoom) {
+                // 多人对战模式
+                if (isPlayerTurn) {
+                    socket.emit('makeMove', {
+                        roomId: currentRoom,
+                        x: i,
+                        y: j
+                    });
                 }
-            }, 100);
+            } else {
+                // 人机对战模式
+                makeMove(i, j, 1);
+                
+                // AI回合
+                setTimeout(() => {
+                    const aiMove = getAIMove();
+                    if (aiMove) {
+                        makeMove(aiMove.x, aiMove.y, 2);
+                    }
+                }, 100);
+            }
         }
     }
 }
 
-// 添加落子函数
+// 添加房间控制函数
+function createRoom() {
+    socket.emit('createRoom');
+}
+
+function joinRoom() {
+    const roomId = document.getElementById('roomCode').value;
+    if (roomId) {
+        socket.emit('joinRoom', roomId);
+    }
+}
+
+function leaveRoom() {
+    if (currentRoom) {
+        socket.emit('leaveRoom', currentRoom);
+        currentRoom = null;
+        document.getElementById('roomInfo').style.display = 'none';
+        resetGame();
+    }
+}
+
+// 修改落子函数
 function makeMove(x, y, player) {
     if (board[x][y] === 0) {
         board[x][y] = player;
@@ -273,7 +382,21 @@ function makeMove(x, y, player) {
         if (checkWin(x, y, player)) {
             gameOver = true;
             setTimeout(() => {
-                alert(player === 1 ? "你赢了！" : "电脑赢了！");
+                let message;
+                if (currentRoom) {
+                    // 多人对战模式
+                    message = isPlayerTurn ? "你赢了！" : "对手赢了！";
+                } else {
+                    // 人机对战模式
+                    message = player === 1 ? "你赢了！" : "电脑赢了！";
+                }
+                alert(message);
+                
+                // 游戏结束后重置
+                setTimeout(() => {
+                    resetGame();
+                    gameOver = false;
+                }, 500);
             }, 100);
         }
     }
@@ -432,15 +555,3 @@ function evaluateLine(x, y, direction, player) {
 
     return 1;
 }
-
-// 修改初始化事件监听
-document.addEventListener('DOMContentLoaded', () => {
-    initializeCanvas();
-    canvas.addEventListener('click', handleClick);
-    
-    // 监听窗口大小变化
-    window.addEventListener('resize', () => {
-        initializeCanvas();
-        drawPieces();
-    });
-});
