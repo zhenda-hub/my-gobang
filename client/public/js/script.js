@@ -194,7 +194,7 @@ class Game {
         // 检查横、竖四个方向
         const directions = [
             [[0, 1], [0, -1]], // 横向
-            [[1, 0], [-1, 0]], // 竖向
+            [[1, 0], [-1, 0]], // 竖���
             [[1, 1], [-1, -1]], // 主对角线
             [[1, -1], [-1, 1]]  // 副对角线
         ];
@@ -281,11 +281,23 @@ let isPlayerTurn = false;
 // 初始化 WebSocket
 function initializeSocket() {
     try {
-        socket = io(); // 确保已经引入了 socket.io-client
-        console.log('WebSocket 连接初始化');
-
+        // 使用相对路径连接 WebSocket
+        socket = io('/', {
+            path: '/socket.io',
+            transports: ['websocket', 'polling'],
+            autoConnect: true
+        });
+        
         socket.on('connect', () => {
-            console.log('WebSocket 已连接');
+            console.log('WebSocket 已连接，ID:', socket.id);
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('连接错误:', error);
+        });
+
+        socket.on('disconnect', (reason) => {
+            console.log('断开连接:', reason);
         });
 
         socket.on('roomCreated', ({ roomId }) => {

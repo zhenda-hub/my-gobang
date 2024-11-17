@@ -12,6 +12,11 @@ export default defineConfig({
       '/api': {
         target: 'http://game-server:3000',
         changeOrigin: true
+      },
+      '/socket.io': {
+        target: 'http://game-server:3000',
+        ws: true,
+        changeOrigin: true
       }
     },
     fs: {
@@ -25,6 +30,6 @@ export default defineConfig({
     assetsDir: 'assets'
   },
   optimizeDeps: {
-    force: true
+    include: ['socket.io-client']
   }
 }) 

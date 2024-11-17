@@ -63,7 +63,12 @@
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- 使用 ES Module 方式引入 socket.io-client -->
+    <script type="module">
+        import { io } from "socket.io-client";
+        window.io = io;
+    </script>
+    <script src="public/js/auth.js"></script>
     <script src="public/js/script.js"></script>
 </body>
 </html>
