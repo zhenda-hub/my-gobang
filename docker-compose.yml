@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  game-server:
+  server:
     build:
       context: .
       dockerfile: server/Dockerfile
@@ -24,7 +24,7 @@ services:
     depends_on:
       - mongo
 
-  dev-server:
+  client:
     build:
       context: .
       dockerfile: client/Dockerfile
@@ -40,7 +40,7 @@ services:
     networks:
       - app-network
     depends_on:
-      - game-server
+      - server
 
   mongo:
     image: mongo:latest
