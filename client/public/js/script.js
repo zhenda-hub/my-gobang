@@ -95,6 +95,30 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 初始调试
     debug();
+
+    // 添加模式切换功能
+    const aiModeBtn = document.getElementById('aiModeBtn');
+    const pvpModeBtn = document.getElementById('pvpModeBtn');
+    const aiControls = document.getElementById('aiControls');
+    const pvpControls = document.getElementById('pvpControls');
+
+    aiModeBtn.addEventListener('click', () => {
+        aiModeBtn.classList.add('active');
+        pvpModeBtn.classList.remove('active');
+        aiControls.style.display = 'block';
+        pvpControls.style.display = 'none';
+        // 如果在房间中，离开房间
+        if (currentRoom) {
+            leaveRoom();
+        }
+    });
+
+    pvpModeBtn.addEventListener('click', () => {
+        pvpModeBtn.classList.add('active');
+        aiModeBtn.classList.remove('active');
+        pvpControls.style.display = 'block';
+        aiControls.style.display = 'none';
+    });
 });
 
 function initializeCanvas() {
